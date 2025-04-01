@@ -1,0 +1,48 @@
+/* Drop zone styles */
+.drop-zone {
+  width: 100%;
+  max-width: 800px;
+  padding: 2rem;
+  border: 3px dashed #333;
+  border-radius: 4px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.drop-zone.dragging {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: #555;
+}
+
+.drop-zone h2 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.instructions {
+  text-align: left;
+  display: inline-block;
+  margin: 0 auto;
+  padding-left: 2rem;
+  color: #333;
+}
+
+.instructions li {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.instructions strong {
+  text-decoration: underline;
+}
+
+.privacy-note {
+  margin-top: 3rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.privacy-note p {
+  margin: 0.2rem 0;
+}

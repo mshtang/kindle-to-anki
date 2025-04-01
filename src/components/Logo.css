@@ -1,0 +1,23 @@
+/* Logo styles */
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo-squares {
+  display: flex;
+  gap: 2px;
+  margin-right: 10px;
+}
+
+.logo-square {
+  width: 15px;
+  height: 15px;
+  background-color: #333;
+}
+
+.logo-text {
+  font-weight: bold;
+  color: #333;
+  font-size: 1.2rem;
+}
