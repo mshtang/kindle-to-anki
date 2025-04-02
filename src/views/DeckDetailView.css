@@ -1,0 +1,121 @@
+.deck-detail-view {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.deck-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.deck-navigation {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.deck-navigation a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.deck-navigation a:hover {
+  text-decoration: underline;
+}
+
+.deck-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.export-buttons button {
+  background-color: #ffeb3b;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.export-buttons button:hover {
+  background-color: #fdd835;
+}
+
+.vocab-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.vocab-table th,
+.vocab-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.vocab-table th {
+  background-color: #f9f9f9;
+  font-weight: 500;
+}
+
+.vocab-table tr:hover {
+  background-color: #f5f5f5;
+}
+
+.vocab-table input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid transparent;
+  background-color: transparent;
+}
+
+.vocab-table input:focus {
+  border: 1px solid #ddd;
+  background-color: #fff;
+  outline: none;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  color: #ff5252;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 5px;
+}
+
+.delete-button:hover {
+  color: #d32f2f;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+}
+
+.error {
+  color: #d32f2f;
+}

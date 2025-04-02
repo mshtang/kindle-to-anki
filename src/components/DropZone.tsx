@@ -23,8 +23,7 @@ const DropZone = () => {
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile && droppedFile.name === "vocab.db") {
       setFile(droppedFile);
-      // Navigate to the deck view with the file
-      navigate('/decks', { state: { vocabFile: droppedFile } });
+      navigate('/decks', { state: { vocabFile: file } });
     } else {
       alert("Please drop a valid vocab.db file");
     }

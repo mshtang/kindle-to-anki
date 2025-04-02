@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import DeckList from '../components/DeckList/DeckList';
 import KindleVocab from '../services/kindle-vocab';
 import { Book } from '../services/types';
 import './DeckView.css';
@@ -69,19 +70,18 @@ const DeckView: React.FC<DeckViewProps> = ({ vocabFile }) => {
     return <div className="error">{error}</div>;
   }
 
+  const handleDeckSelect = (book: Book) => {
+    navigate(`/decks/${book.id}`);
+  };
+
   return (
     <div className="deck-view">
       <h1>Decks</h1>
       <p>Your Kindle vocabulary:</p>
-      
-      <div className="deck-grid">
-        {books.map((book) => (
-          <div key={book.id} className="deck-card">
-            <div className="deck-title">{book.title}</div>
-            <div className="word-count">{book.count} words</div>
-          </div>
-        ))}
-      </div>
+      <DeckList
+        books={books}
+        onDeckSelect={handleDeckSelect}
+      />
     </div>
   );
 };

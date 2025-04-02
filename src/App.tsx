@@ -3,6 +3,7 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-d
 import "./App.css";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
+import DeckDetailView from "./views/DeckDetailView";
 import DeckView from "./views/DeckView";
 import HomeView from "./views/HomeView";
 
@@ -14,6 +15,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<HomeView />} />
           <Route path="/decks" element={<DeckView />} />
+          <Route path="/decks/:id" element={<DeckDetailView />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Footer />
