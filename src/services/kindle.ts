@@ -1,40 +1,23 @@
-/**
- * @typedef {Object} Vocab a vocabulary entry in the database
- * @property {string} baseForm word stem
- * @property {string} selection the word as highlighted on the device
- * @property {string} context word context
- * @property {string | any[]} [def] definition
- * @property {boolean} [_removed]
- *
- * @typedef {Object} Book
- * @property {string} id
- * @property {string} title
- * @property {string} authors
- * @property {string} language
- * @property {string} asin
- * @property {string} cover an image URL
- * @property {number} count
- * @property {number} lastLookup
- * @property {Vocab[]} [vocabs] `undefined` until the vocab items are resolved.
- */
+import { Book, Vocab } from './types';
 
 export default class KindleService {
+  private SQL: any;
+  private db: any;
+
   constructor() {
     this.SQL = null;
     this.db = null;
   }
 
-  init() {
+  async init(): Promise<void> {
     const sqlJsUrl = "vendor/sql-memory-growth.js";
 
-    return fetch(sqlJsUrl)
-      .then((resp) => resp.text())
-      .then((script) => {
-        this.SQL = new Function(script + "; return SQL")();
-      });
+    const resp = await fetch(sqlJsUrl);
+    const script = await resp.text();
+    this.SQL = new Function(script + "; return SQL")();
   }
 
-  loadDb(uints) {
+  loadDb(uints: Uint8Array): void {
     this.db = new this.SQL.Database(uints);
   }
 
@@ -42,9 +25,9 @@ export default class KindleService {
    * Fetch books from the database, sorted by the last lookup time in
    * descending order.
    *
-   * @returns {Book[]} the books in the database.
+   * @returns the books in the database.
    */
-  queryBooks() {
+  queryBooks(): Book[] | null {
     let booksQuery;
     try {
       booksQuery = this.db.exec(
@@ -54,7 +37,7 @@ export default class KindleService {
       return null;
     }
 
-    let books = booksQuery[0].values.map((book) => {
+    let books = booksQuery[0].values.map((book: any[]) => {
       let escapedId = book[0].replace(/'/g, "''");
       let countQuery = this.db.exec(
         `SELECT COUNT(timestamp) FROM lookups WHERE book_key='${escapedId}'`
@@ -86,7 +69,7 @@ export default class KindleService {
       };
     });
 
-    books = books.filter(Boolean);
+    books = books.filter(Boolean) as Book[];
     books.sort((a, b) => b.lastLookup - a.lastLookup); // newest first
 
     return books;
@@ -95,9 +78,9 @@ export default class KindleService {
   /**
    * Retrieve the vocabulary entries associated with a book id.
    * @param id the book id
-   * @return {Vocab}
+   * @return vocabulary entries
    */
-  queryVocabs(id) {
+  queryVocabs(id: string): Vocab[] | undefined {
     let escapedId = id.replace(/'/g, "''");
     let vocabsQuery = this.db.exec(`
 SELECT
@@ -111,13 +94,13 @@ WHERE lookups.book_key='${escapedId}';
     if (!vocabsQuery[0]) return;
 
     return vocabsQuery[0].values
-      .map((row) => {
+      .map((row: any[]) => {
         return {
           baseForm: row[0],
           selection: row[1],
           context: row[2],
         };
       })
-      .filter((item) => item.selection);
+      .filter((item: Vocab) => item.selection);
   }
 }

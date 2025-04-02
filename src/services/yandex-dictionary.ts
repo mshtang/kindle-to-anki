@@ -12,22 +12,30 @@ const langs = [ 'be-be','be-ru','bg-ru','cs-en','cs-ru','da-en','da-ru','de-de',
 const defaultLang = 'en';
 
 /**
+ * Response from Yandex Dictionary API
+ */
+interface YandexResponse {
+  def: any[];
+  [key: string]: any;
+}
+
+/**
  * Download a dictionary definition of a word
  *
- * @param {string} text
- * @param {string} lang
- * @param {string} targetLang
- * @returns {promise}
+ * @param text The word to look up
+ * @param lang The source language
+ * @param targetLang The target language
+ * @returns A promise resolving to the word definition
  */
-export default function yandexDefine(text, lang, targetLang) {
-  let langPair = `${ lang }-${ targetLang }`;
+export default function yandexDefine(text: string, lang: string, targetLang: string): Promise<YandexResponse> {
+  let langPair = `${lang}-${targetLang}`;
 
   if (!langs.includes(langPair)) {
-    langPair = `${ defaultLang }-${ targetLang }`;
+    langPair = `${defaultLang}-${targetLang}`;
   }
 
   if (!langs.includes(langPair)) {
-    langPair = `${ defaultLang }-${ defaultLang }`;
+    langPair = `${defaultLang}-${defaultLang}`;
   }
 
   if (!langs.includes(langPair)) {
