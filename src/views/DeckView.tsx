@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import KindleVocab from '../services/kindle-vocab';
 import { Book } from '../services/types';
 import './DeckView.css';
@@ -13,10 +13,12 @@ const DeckView: React.FC<DeckViewProps> = ({ vocabFile }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const fileFromState = location.state?.vocabFile;
 
   useEffect(() => {
     // If no vocab file is provided, redirect back to home
-    if (!vocabFile) {
+    if (!vocabFile && !fileFromState) {
       navigate('/');
       return;
     }
@@ -24,8 +26,8 @@ const DeckView: React.FC<DeckViewProps> = ({ vocabFile }) => {
     const processVocabFile = async () => {
       setLoading(true);
       try {
-        // Process the vocab.db file
-        const arrayBuffer = await vocabFile.arrayBuffer();
+        const fileToProcess = vocabFile || fileFromState;
+        const arrayBuffer = await fileToProcess.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
         
         // This would need to be implemented in the KindleService
@@ -57,7 +59,7 @@ const DeckView: React.FC<DeckViewProps> = ({ vocabFile }) => {
     };
 
     processVocabFile();
-  }, [vocabFile, navigate]);
+  }, [vocabFile, fileFromState, navigate]);
 
   if (loading) {
     return <div className="loading">Loading vocabulary data...</div>;

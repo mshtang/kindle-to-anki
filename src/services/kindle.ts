@@ -11,10 +11,15 @@ export default class KindleService {
 
   async init(): Promise<void> {
     const sqlJsUrl = "vendor/sql-memory-growth.js";
-
-    const resp = await fetch(sqlJsUrl);
-    const script = await resp.text();
-    this.SQL = new Function(script + "; return SQL")();
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = sqlJsUrl;
+      script.onload = () => {
+        this.SQL = window["SQL"];
+        resolve();
+      };
+      document.head.appendChild(script);
+    });
   }
 
   loadDb(uints: Uint8Array): void {

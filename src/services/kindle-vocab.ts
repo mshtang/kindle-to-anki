@@ -1,8 +1,8 @@
-import config from '../../config';
-import { Book, BookDeck, Vocab, VocabItem } from './types';
+import config from "../config";
+import { Book, BookDeck, Vocab, VocabItem } from "./types";
 
 const localStorage = window.localStorage;
-const storageKey = 'fluentcards.kindleBooks';
+const storageKey = "fluentcards.kindleBooks";
 
 class KindleVocab {
   /**
@@ -49,7 +49,7 @@ class KindleVocab {
    * @returns The book deck
    */
   public getBook(id: string): BookDeck {
-    const book = this.books.find(item => item.id === id);
+    const book = this.books.find((item) => item.id === id);
 
     if (!book) {
       throw new Error(`Book with id ${id} not found`);
@@ -64,15 +64,13 @@ class KindleVocab {
 
       words: book.vocabs
         ? book.vocabs
-            .filter(item => !item._removed)
-            .map(item => ({
-              selection: item.selection || '',
+            .filter((item) => !item._removed)
+            .map((item) => ({
+              selection: item.selection || "",
               context: item.context,
-              def: item.def || [
-                { text: item.baseForm }
-              ]
+              def: item.def || [{ text: item.baseForm }],
             }))
-        : []
+        : [],
     };
   }
 
@@ -92,12 +90,18 @@ class KindleVocab {
    * @param item The vocabulary item to update
    * @param newFields The fields to update
    */
-  public updateItem(bookId: string, item: VocabItem, newFields: Partial<VocabItem>): void {
-    const book = this.books.find(b => b.id === bookId);
-    
+  public updateItem(
+    bookId: string,
+    item: VocabItem,
+    newFields: Partial<VocabItem>
+  ): void {
+    const book = this.books.find((b) => b.id === bookId);
+
     if (book && book.vocabs) {
-      const index = book.vocabs.findIndex(vocab => {
-        return vocab.selection === item.selection && vocab.context === item.context;
+      const index = book.vocabs.findIndex((vocab) => {
+        return (
+          vocab.selection === item.selection && vocab.context === item.context
+        );
       });
 
       if (index !== -1) {
