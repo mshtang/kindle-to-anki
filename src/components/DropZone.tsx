@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./DropZone.css";
 
 const DropZone = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState(null);
+  const navigate = useNavigate();
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -21,8 +23,8 @@ const DropZone = () => {
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile && droppedFile.name === "vocab.db") {
       setFile(droppedFile);
-      // Here you would process the file
-      console.log("File dropped:", droppedFile.name);
+      // Navigate to the deck view with the file
+      navigate('/decks', { state: { vocabFile: droppedFile } });
     } else {
       alert("Please drop a valid vocab.db file");
     }

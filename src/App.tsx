@@ -1,18 +1,24 @@
 import React from "react";
+import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import "./App.css";
-import DropZone from "./components/DropZone";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
+import DeckView from "./views/DeckView";
+import HomeView from "./views/HomeView";
 
 const App: React.FC = () => {
   return (
-    <div className="app-container">
-      <Header />
-      <main className="main-content">
-        <DropZone />
-      </main>
-      <Footer />
-    </div>
+    <Router>
+      <div className="app-container">
+        <Header />
+        <Routes>
+          <Route path="/" element={<HomeView />} />
+          <Route path="/decks" element={<DeckView />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 
