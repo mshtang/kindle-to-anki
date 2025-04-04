@@ -6,13 +6,7 @@
   padding: 1rem 2rem;
 }
 
-.navigation {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.nav-link {
-  color: #333;
+.header a {
   text-decoration: none;
-  font-weight: 500;
+  color: inherit;
 }

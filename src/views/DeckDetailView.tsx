@@ -121,7 +121,7 @@ const DeckDetailView: React.FC = () => {
           <a href="#" onClick={() => navigate('/decks')}>Decks</a> &gt; {deck?.title || 'Vocabulary'}
         </div>
         <div className="deck-actions">
-          <button className="action-button" onClick={handleFetchDefinitions}>Fetch definitions</button>
+          {/* <button className="action-button" onClick={handleFetchDefinitions}>Fetch definitions</button> */}
           <div className="export-buttons">
             <span>Download the deck as:</span>
             <button onClick={() => handleExport('basic')}>Anki Basic</button>
