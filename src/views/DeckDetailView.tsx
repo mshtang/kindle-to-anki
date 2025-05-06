@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import exportCsv from '../services/csv';
-import { VocabItem } from '../services/types';
+import { BookDeck, VocabItem, Word } from '../services/types';
 import VocabStore from '../services/vocab-store';
 import './DeckDetailView.css';
 
 const DeckDetailView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [deck, setDeck] = useState<any>(null);
+  const [deck, setDeck] = useState<BookDeck | null>(null);
   const [vocabItems, setVocabItems] = useState<VocabItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,11 +20,9 @@ const DeckDetailView: React.FC = () => {
     }
 
     try {
-      const deckData = VocabStore.getDeck(id);
+      const deckData = VocabStore.getDeck(id) as BookDeck;
       setDeck(deckData);
-
-      // Extract vocab items from the deck
-      let items: VocabItem[] = [];
+      let items: Word[] = [];
       if ('words' in deckData) {
         items = deckData.words.filter((item: any) => !item._removed);
       }
@@ -40,36 +38,26 @@ const DeckDetailView: React.FC = () => {
 
   const handleWordChange = (index: number, value: string) => {
     const updatedItems = [...vocabItems];
-    if (updatedItems[index].def && updatedItems[index].def[0]) {
-      updatedItems[index].def[0].text = value;
-      setVocabItems(updatedItems);
-
-      // Update in store
-      VocabStore.updateItem(id!, updatedItems[index], {
-        def: updatedItems[index].def
-      });
-    }
+    updatedItems[index].baseForm = value;
+    setVocabItems(updatedItems);
+    VocabStore.updateItem(id!, updatedItems[index], {
+      baseForm: updatedItems[index].baseForm
+    });
   };
 
   const handleDefinitionChange = (index: number, value: string) => {
     const updatedItems = [...vocabItems];
-    if (updatedItems[index].def && updatedItems[index].def[0] && updatedItems[index].def[0].tr) {
-      updatedItems[index].def[0].tr[0].text = value;
-      setVocabItems(updatedItems);
-
-      // Update in store
-      VocabStore.updateItem(id!, updatedItems[index], {
-        def: updatedItems[index].def
-      });
-    }
+    updatedItems[index].def = value;
+    setVocabItems(updatedItems);
+    VocabStore.updateItem(id!, updatedItems[index], {
+      def: updatedItems[index].def
+    });
   };
 
   const handleContextChange = (index: number, value: string) => {
     const updatedItems = [...vocabItems];
     updatedItems[index].context = value;
     setVocabItems(updatedItems);
-
-    // Update in store
     VocabStore.updateItem(id!, updatedItems[index], {
       context: value
     });
@@ -77,11 +65,7 @@ const DeckDetailView: React.FC = () => {
 
   const handleDeleteRow = (index: number) => {
     const itemToRemove = vocabItems[index];
-
-    // Mark as removed in the store
     VocabStore.removeItem(id!, itemToRemove);
-
-    // Remove from local state
     const updatedItems = vocabItems.filter((_, i) => i !== index);
     setVocabItems(updatedItems);
   };
@@ -95,10 +79,20 @@ const DeckDetailView: React.FC = () => {
 
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `${deck.title || 'vocabulary'}_${type}.csv`);
+    link.setAttribute('download', `${deck?.title || 'vocabulary'}_${type}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleCellEdit = (index: number, field: string, value: string) => {
+    if (field === 'word') {
+      handleWordChange(index, value);
+    } else if (field === 'definition') {
+      handleDefinitionChange(index, value);
+    } else if (field === 'context') {
+      handleContextChange(index, value);
+    }
   };
 
   const handleFetchDefinitions = () => {
@@ -121,7 +115,6 @@ const DeckDetailView: React.FC = () => {
           <a href="#" onClick={() => navigate('/decks')}>Decks</a> &gt; {deck?.title || 'Vocabulary'}
         </div>
         <div className="deck-actions">
-          {/* <button className="action-button" onClick={handleFetchDefinitions}>Fetch definitions</button> */}
           <div className="export-buttons">
             <span>Download the deck as:</span>
             <button onClick={() => handleExport('basic')}>Anki Basic</button>
@@ -131,58 +124,68 @@ const DeckDetailView: React.FC = () => {
         </div>
       </div>
 
-      <table className="vocab-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th>Word</th>
-            <th>Definition</th>
-            <th>Context</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {vocabItems.map((item, index) => (
-            <tr key={index}>
-              <td>{index + 1}</td>
-              <td>
-                <input
-                  type="text"
-                  value={item.def && item.def[0] ? item.def[0].text : item.selection}
-                  onChange={(e) => handleWordChange(index, e.target.value)}
-                />
-              </td>
-              <td>
-                <input
-                  type="text"
-                  value={
-                    item.def &&
-                      item.def[0] &&
-                      item.def[0].tr ?
-                      item.def[0].tr[0]?.text || '' : ''
-                  }
-                  onChange={(e) => handleDefinitionChange(index, e.target.value)}
-                />
-              </td>
-              <td>
-                <input
-                  type="text"
-                  value={item.context}
-                  onChange={(e) => handleContextChange(index, e.target.value)}
-                />
-              </td>
-              <td>
-                <button
-                  className="delete-button"
-                  onClick={() => handleDeleteRow(index)}
-                >
-                  ×
-                </button>
-              </td>
+      <div className="deck-detail-table-container">
+        <table className="deck-detail-table">
+          <thead>
+            <tr>
+              <th className="index-column">#</th>
+              <th className="word-column">Word</th>
+              <th className='word-column'>Lemma</th>
+              <th className="definition-column">Definition</th>
+              <th className="context-column">Context</th>
+              <th className="action-column"></th>
             </tr>
-          ))}
-        </tbody>
+          </thead>
+          <tbody>
+            {vocabItems.map((item, index) => (
+              <tr key={index}>
+                <td className="index-cell">{index + 1}</td>
+                <td className="word-cell">
+                  <div>
+                    {item.def && item.def[0] ? item.def[0].text : item.selection}
+                  </div>
+                </td>
+                <td className="word-cell">
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleCellEdit(index, 'word', e.target.textContent || '')}
+                  >
+                    {item.baseForm}
+                  </div>
+                </td>
+                <td className="definition-cell">
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleCellEdit(index, 'definition', e.target.textContent || '')}
+                  >
+                    {item.def && item.def[0] ? item.def[0] : ''}
+                  </div>
+                </td>
+                <td className="context-cell">
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleCellEdit(index, 'context', e.target.textContent || '')}
+                  >
+                    {item.context}
+                  </div>
+                </td>
+                <td className="delete-cell">
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDeleteRow(index)}
+                    aria-label="Delete row"
+                  >
+                    ×
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
       </table>
+    </div>
     </div>
   );
 };

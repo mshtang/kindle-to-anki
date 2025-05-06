@@ -1,5 +1,5 @@
 import config from "../config";
-import { Book, BookDeck, Vocab, VocabItem } from "./types";
+import { Book, BookDeck, Vocab, Word } from "./types";
 
 const localStorage = window.localStorage;
 const storageKey = "fluentcards.kindleBooks";
@@ -63,14 +63,14 @@ class KindleVocab {
       cover: book.cover,
 
       words: book.vocabs
-        ? book.vocabs
-            .filter((item) => !item._removed)
-            .map((item) => ({
-              selection: item.selection || "",
-              context: item.context,
-              def: item.def || [{ text: item.baseForm }],
-            }))
-        : [],
+        ? book.vocabs.filter((item) => !item._removed)
+        : // .map((item) => ({
+          //   selection: item.selection || "",
+          //   baseForm: item.baseForm || "",
+          //   context: item.context,
+          //   def: item.def,
+          // }))
+          [],
     };
   }
 
@@ -92,8 +92,8 @@ class KindleVocab {
    */
   public updateItem(
     bookId: string,
-    item: VocabItem,
-    newFields: Partial<VocabItem>
+    item: Word,
+    newFields: Partial<Word>
   ): void {
     const book = this.books.find((b) => b.id === bookId);
 

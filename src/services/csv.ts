@@ -1,4 +1,3 @@
-import { getArticle } from "./formatting";
 import { VocabItem } from "./types";
 import { escapeRegexp } from "./Utils";
 
@@ -9,16 +8,13 @@ import { escapeRegexp } from "./Utils";
  * @returns The formatted word
  */
 function formatWord(item: VocabItem): string {
-  const data = item.def[0];
-  const article = getArticle(data, item.language);
-
-  let word = data.text;
-  if (article) word = `${article} ${data.text}`;
-
-  const extra = [data.fl, data.num || data.gen].filter(Boolean).join(", ");
-  if (extra) word += `; ${extra}`;
-
-  return word;
+  // const data = item.def[0];
+  // const article = getArticle(data, item.language);
+  // let word = data.text;
+  // if (article) word = `${article} ${data.text}`;
+  // const extra = [data.fl, data.num || data.gen].filter(Boolean).join(", ");
+  // if (extra) word += `; ${extra}`;
+  // return word;
 }
 
 /**
@@ -29,13 +25,13 @@ function formatWord(item: VocabItem): string {
  * @returns The formatted definition
  */
 function formatDefinition(item: VocabItem, maxDefs: number = 2): string {
-  const definitions: string[] = [];
-  if (item.def && item.def[0] && item.def[0].tr) {
-    item.def.forEach((def) =>
-      def.tr.forEach((tr) => definitions.push(tr.text))
-    );
-  }
-  return definitions.slice(0, maxDefs).join("; ");
+  // const definitions: string[] = [];
+  // if (item.def && item.def[0] && item.def[0].tr) {
+  //   item.def.forEach((def) =>
+  //     def.tr.forEach((tr) => definitions.push(tr.text))
+  //   );
+  // }
+  // return definitions.slice(0, maxDefs).join("; ");
 }
 
 /**
@@ -76,17 +72,17 @@ function plain(item: VocabItem): string[] {
  * @returns A CSV entry where the first element is the front and the second is the back
  */
 function basic(item: VocabItem): [string, string] {
-  const word = formatWord(item);
-  const ts = item.def[0].ts
-    ? `<br /><small class="ipa">${item.def[0].ts}</small>`
-    : "";
-  const context = `<p class="context">${formatContext(item)}</p>`;
-  return [
-    // front
-    `${word}${ts}${context}`,
-    // back
-    formatDefinition(item) || context,
-  ];
+  // const word = formatWord(item);
+  // const ts = item.def[0].ts
+  //   ? `<br /><small class="ipa">${item.def[0].ts}</small>`
+  //   : "";
+  // const context = `<p class="context">${formatContext(item)}</p>`;
+  // return [
+  //   // front
+  //   `${word}${ts}${context}`,
+  //   // back
+  //   formatDefinition(item) || context,
+  // ];
 }
 
 /**
@@ -96,18 +92,16 @@ function basic(item: VocabItem): [string, string] {
  * @returns A CSV entry where the first element is the front and the second is the back
  */
 function cloze(item: VocabItem): [string, string, string] {
-  const word = formatWord(item);
-  const def = formatDefinition(item);
-
-  let parts = item.context.split(
-    new RegExp("\\b" + escapeRegexp(item.selection) + "\\b")
-  );
-  if (parts.length === 1) {
-    parts = item.context.split(item.selection);
-  }
-  const cloze = parts.join(`{{c1::${item.selection}}}`).replace(/\n/g, " ");
-
-  return [cloze, word, def];
+  // const word = formatWord(item);
+  // const def = formatDefinition(item);
+  // let parts = item.context.split(
+  //   new RegExp("\\b" + escapeRegexp(item.selection) + "\\b")
+  // );
+  // if (parts.length === 1) {
+  //   parts = item.context.split(item.selection);
+  // }
+  // const cloze = parts.join(`{{c1::${item.selection}}}`).replace(/\n/g, " ");
+  // return [cloze, word, def];
 }
 
 /**

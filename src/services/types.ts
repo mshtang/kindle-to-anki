@@ -32,11 +32,11 @@ export interface Book {
  * A looked up word
  */
 export interface VocabItem {
-  baseForm: string;  // the word stem
+  baseForm: string; // the word stem
   selection: string; // the word as highlighted on the device
-  context: string;   // the context the word appears in
-  language: string;
-  def: any[];
+  context: string; // the context the word appears in
+  def?: string | any[];
+  language?: string;
   _removed?: boolean;
 }
 
@@ -49,7 +49,7 @@ export interface BookDeck {
   lang: string;
   language: string;
   cover: string;
-  words: Word[];
+  words: VocabItem[];
 }
 
 /**
@@ -59,11 +59,14 @@ export type WordDef = undefined | string | Array<{ text: string }>;
 
 /**
  * A word entry
+ * The same as Vocab
  */
 export interface Word {
-  selection: string;
-  context: string;
-  def: WordDef;
+  baseForm: string; // word stem
+  selection: string; // the word as highlighted on the device
+  context: string; // word context
+  def?: string | any[]; // definition
+  _removed?: boolean;
 }
 
 /**
