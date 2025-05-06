@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import TableRow from '../components/TableRow/TableRow';
 import exportCsv from '../services/csv';
 import { BookDeck, VocabItem, Word } from '../services/types';
 import VocabStore from '../services/vocab-store';
@@ -36,64 +37,60 @@ const DeckDetailView: React.FC = () => {
     }
   }, [id, navigate]);
 
-  const handleWordChange = (index: number, value: string) => {
+  const handleItemUpdate = useCallback((index: number, field: keyof Word, value: string) => {
     const updatedItems = [...vocabItems];
-    updatedItems[index].baseForm = value;
-    setVocabItems(updatedItems);
-    VocabStore.updateItem(id!, updatedItems[index], {
-      baseForm: updatedItems[index].baseForm
-    });
-  };
+    const item = updatedItems[index];
 
-  const handleDefinitionChange = (index: number, value: string) => {
-    const updatedItems = [...vocabItems];
-    updatedItems[index].def = value;
-    setVocabItems(updatedItems);
-    VocabStore.updateItem(id!, updatedItems[index], {
-      def: updatedItems[index].def
-    });
-  };
+    if (field === 'baseForm' || field === 'def' || field === 'context') {
+      item[field] = value;
+      setVocabItems(updatedItems);
+      const updateData: Partial<Word> = { [field]: value };
+      VocabStore.updateItem(id!, item, updateData);
+    }
+  }, [vocabItems, id]);
 
-  const handleContextChange = (index: number, value: string) => {
-    const updatedItems = [...vocabItems];
-    updatedItems[index].context = value;
-    setVocabItems(updatedItems);
-    VocabStore.updateItem(id!, updatedItems[index], {
-      context: value
-    });
-  };
-
-  const handleDeleteRow = (index: number) => {
+  const handleDeleteRow = useCallback((index: number) => {
     const itemToRemove = vocabItems[index];
     VocabStore.removeItem(id!, itemToRemove);
     const updatedItems = vocabItems.filter((_, i) => i !== index);
     setVocabItems(updatedItems);
-  };
+  }, [vocabItems, id]);
 
-  const handleExport = (type: string) => {
+  const handleExport = useCallback((type: string) => {
     if (vocabItems.length === 0) return;
 
-    const csvContent = exportCsv(vocabItems, type);
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    try {
+      const csvContent = exportCsv(vocabItems, type);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
 
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${deck?.title || 'vocabulary'}_${type}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${deck?.title || 'vocabulary'}_${type}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-  const handleCellEdit = (index: number, field: string, value: string) => {
-    if (field === 'word') {
-      handleWordChange(index, value);
-    } else if (field === 'definition') {
-      handleDefinitionChange(index, value);
-    } else if (field === 'context') {
-      handleContextChange(index, value);
+      URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Error exporting CSV:', err);
+      alert('Failed to export vocabulary as CSV');
     }
-  };
+  }, [vocabItems, deck]);
+
+  const handleCellEdit = useCallback((index: number, field: string, value: string) => {
+    const fieldMap: Record<string, keyof Word> = {
+      'lemma': 'baseForm',
+      'definition': 'def',
+      'context': 'context'
+    };
+
+    const actualField = fieldMap[field];
+    if (actualField) {
+      handleItemUpdate(index, actualField, value);
+    }
+  }, [handleItemUpdate]);
 
   const handleFetchDefinitions = () => {
     // This would be implemented to fetch definitions for words that don't have them
@@ -125,67 +122,34 @@ const DeckDetailView: React.FC = () => {
       </div>
 
       <div className="deck-detail-table-container">
-        <table className="deck-detail-table">
-          <thead>
-            <tr>
-              <th className="index-column">#</th>
-              <th className="word-column">Word</th>
-              <th className='word-column'>Lemma</th>
-              <th className="definition-column">Definition</th>
-              <th className="context-column">Context</th>
-              <th className="action-column"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {vocabItems.map((item, index) => (
-              <tr key={index}>
-                <td className="index-cell">{index + 1}</td>
-                <td className="word-cell">
-                  <div>
-                    {item.def && item.def[0] ? item.def[0].text : item.selection}
-                  </div>
-                </td>
-                <td className="word-cell">
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleCellEdit(index, 'word', e.target.textContent || '')}
-                  >
-                    {item.baseForm}
-                  </div>
-                </td>
-                <td className="definition-cell">
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleCellEdit(index, 'definition', e.target.textContent || '')}
-                  >
-                    {item.def && item.def[0] ? item.def[0] : ''}
-                  </div>
-                </td>
-                <td className="context-cell">
-                  <div
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleCellEdit(index, 'context', e.target.textContent || '')}
-                  >
-                    {item.context}
-                  </div>
-                </td>
-                <td className="delete-cell">
-                  <button
-                    className="delete-button"
-                    onClick={() => handleDeleteRow(index)}
-                    aria-label="Delete row"
-                  >
-                    ×
-                  </button>
-                </td>
+        {vocabItems.length > 0 ? (
+          <table className="deck-detail-table">
+            <thead>
+              <tr>
+                <th className="index-column">#</th>
+                <th className="word-column">Word</th>
+                <th className="word-column">Lemma</th>
+                <th className="definition-column">Definition</th>
+                <th className="context-column">Context</th>
+                <th className="action-column"></th>
               </tr>
-            ))}
-          </tbody>
-      </table>
-    </div>
+            </thead>
+            <tbody>
+              {vocabItems.map((item, index) => (
+                <TableRow
+                  key={index}
+                  item={item}
+                  index={index}
+                  onCellEdit={handleCellEdit}
+                  onDeleteRow={handleDeleteRow}
+                />
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="no-items">No vocabulary items found in this deck</div>
+        )}
+      </div>
     </div>
   );
 };

@@ -6,10 +6,10 @@
  * A vocabulary entry in the database
  */
 export interface Vocab {
-  baseForm: string;  // word stem
+  baseForm: string; // word stem
   selection: string; // the word as highlighted on the device
-  context: string;   // word context
-  def?: string | any[]; // definition
+  context: string; // word context
+  def?: string; // definition
   _removed?: boolean;
 }
 
@@ -22,10 +22,10 @@ export interface Book {
   authors: string;
   language: string;
   asin: string;
-  cover: string;     // an image URL
+  cover: string; // an image URL
   count: number;
   lastLookup: number;
-  vocabs?: Vocab[];  // undefined until the vocab items are resolved
+  vocabs?: Vocab[]; // undefined until the vocab items are resolved
 }
 
 /**
@@ -35,7 +35,7 @@ export interface VocabItem {
   baseForm: string; // the word stem
   selection: string; // the word as highlighted on the device
   context: string; // the context the word appears in
-  def?: string | any[];
+  def?: string;
   language?: string;
   _removed?: boolean;
 }
@@ -65,7 +65,7 @@ export interface Word {
   baseForm: string; // word stem
   selection: string; // the word as highlighted on the device
   context: string; // word context
-  def?: string | any[]; // definition
+  def?: string; // definition
   _removed?: boolean;
 }
 
