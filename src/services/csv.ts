@@ -8,13 +8,7 @@ import { escapeRegexp } from "./Utils";
  * @returns The formatted word
  */
 function formatWord(item: VocabItem): string {
-  // const data = item.def[0];
-  // const article = getArticle(data, item.language);
-  // let word = data.text;
-  // if (article) word = `${article} ${data.text}`;
-  // const extra = [data.fl, data.num || data.gen].filter(Boolean).join(", ");
-  // if (extra) word += `; ${extra}`;
-  // return word;
+  return item.baseForm || item.selection || "";
 }
 
 /**
@@ -25,13 +19,7 @@ function formatWord(item: VocabItem): string {
  * @returns The formatted definition
  */
 function formatDefinition(item: VocabItem, maxDefs: number = 2): string {
-  // const definitions: string[] = [];
-  // if (item.def && item.def[0] && item.def[0].tr) {
-  //   item.def.forEach((def) =>
-  //     def.tr.forEach((tr) => definitions.push(tr.text))
-  //   );
-  // }
-  // return definitions.slice(0, maxDefs).join("; ");
+  return item.def ?? "";
 }
 
 /**
@@ -58,11 +46,7 @@ function formatContext(item: VocabItem): string {
  * @returns Array of formatted strings
  */
 function plain(item: VocabItem): string[] {
-  return [
-    formatWord(item),
-    item.context.replace(/\n/g, " "),
-    formatDefinition(item),
-  ];
+  return [formatWord(item), formatDefinition(item), formatContext(item)];
 }
 
 /**
@@ -83,6 +67,7 @@ function basic(item: VocabItem): [string, string] {
   //   // back
   //   formatDefinition(item) || context,
   // ];
+  return ["", ""];
 }
 
 /**
@@ -102,6 +87,7 @@ function cloze(item: VocabItem): [string, string, string] {
   // }
   // const cloze = parts.join(`{{c1::${item.selection}}}`).replace(/\n/g, " ");
   // return [cloze, word, def];
+  return ["", "", ""];
 }
 
 /**

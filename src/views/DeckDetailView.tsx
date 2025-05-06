@@ -72,7 +72,6 @@ const DeckDetailView: React.FC = () => {
       document.body.removeChild(link);
 
       URL.revokeObjectURL(url);
-      document.body.removeChild(link);
     } catch (err) {
       console.error('Error exporting CSV:', err);
       alert('Failed to export vocabulary as CSV');
