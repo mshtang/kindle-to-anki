@@ -1,48 +1,56 @@
-/* Drop zone styles */
 .drop-zone {
-  width: 100%;
-  max-width: 800px;
-  padding: 2rem;
-  border: 3px dashed #333;
-  border-radius: 4px;
+  border: 3px dashed #ccc;
+  border-radius: 12px;
+  padding: 40px;
   text-align: center;
+  background-color: #f9f9f9;
+  margin: 30px auto;
+  max-width: 800px;
   transition: all 0.3s ease;
 }
 
 .drop-zone.dragging {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-color: #555;
+  border-color: #4a6fa5;
+  background-color: rgba(74, 111, 165, 0.05);
+  box-shadow: 0 0 20px rgba(74, 111, 165, 0.2);
 }
 
 .drop-zone h2 {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
   color: #333;
 }
 
 .instructions {
   text-align: left;
-  display: inline-block;
-  margin: 0 auto;
-  padding-left: 2rem;
-  color: #333;
+  max-width: 500px;
+  margin: 0 auto 30px;
+  padding-left: 20px;
 }
 
 .instructions li {
-  margin-bottom: 1rem;
+  margin-bottom: 15px;
+  line-height: 1.5;
+  color: #444;
   font-size: 1.1rem;
 }
 
 .instructions strong {
-  text-decoration: underline;
+  color: #4a6fa5;
 }
 
 .privacy-note {
-  margin-top: 3rem;
-  font-size: 0.9rem;
-  color: #555;
+  margin-top: 30px;
+  padding: 15px;
+  background-color: #f9f871;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #333;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .privacy-note p {
-  margin: 0.2rem 0;
+  margin: 5px 0;
 }

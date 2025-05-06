@@ -75,13 +75,11 @@ const DeckView: React.FC<DeckViewProps> = ({ vocabFile }) => {
   }
 
   const handleDeckSelect = (book: Book) => {
-    navigate(`/decks/${book.id}`);
+    navigate(`/decks/${book.id}`, { state: { deckTitle: book.title } });
   };
 
   return (
     <div className="deck-view">
-      <h1>Decks</h1>
-      <p>Your Kindle vocabulary:</p>
       <DeckList
         books={books}
         onDeckSelect={handleDeckSelect}

@@ -108,14 +108,19 @@ const DeckDetailView: React.FC = () => {
     <div className="deck-detail-view">
       <div className="deck-header">
         <div className="deck-navigation">
-          <a href="#" onClick={() => navigate('/decks')}>Decks</a> &gt; {deck?.title || 'Vocabulary'}
+          <a href="#" onClick={(e) => { e.preventDefault(); navigate('/decks'); }}>Decks</a> &gt; {deck?.title || 'Vocabulary'}
+        </div>
+        <h1>{deck?.title || 'Vocabulary'}</h1>
+        <div className="deck-info">
+          {deck?.language && <span className="deck-language">Language: {deck.language}</span>}
+          {vocabItems.length > 0 && <span className="word-count">{vocabItems.length} words</span>}
         </div>
         <div className="deck-actions">
           <div className="export-buttons">
-            <span>Download the deck as:</span>
-            <button onClick={() => handleExport('basic')}>Anki Basic</button>
-            <button onClick={() => handleExport('cloze')}>Anki Cloze</button>
-            <button onClick={() => handleExport('plain')}>Plain CSV</button>
+            <span>Download as:</span>
+            <button className="export-button anki-basic" onClick={() => handleExport('basic')}>Anki Basic</button>
+            <button className="export-button anki-cloze" onClick={() => handleExport('cloze')}>Anki Cloze</button>
+            <button className="export-button plain-csv" onClick={() => handleExport('plain')}>Plain CSV</button>
           </div>
         </div>
       </div>

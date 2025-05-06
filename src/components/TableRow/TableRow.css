@@ -1,46 +1,55 @@
-/* Cell styling */
 .index-cell {
-  padding: 12px 16px;
-  color: #666;
+  color: #777;
+  font-size: 0.9rem;
   text-align: center;
 }
 
-.word-cell div,
-.definition-cell div,
-.context-cell div {
-  padding: 12px 16px;
-  min-height: 24px;
-  outline: none;
-  white-space: pre-wrap;
-  word-break: break-word;
+.word-cell {
+  font-weight: 500;
 }
 
-.context-cell div {
+.definition-cell, .context-cell {
+  color: #333;
   line-height: 1.5;
 }
 
-.delete-cell {
-  text-align: center;
-  padding: 12px 8px;
+.context-cell {
+  font-style: italic;
+  color: #555;
 }
 
 .delete-button {
-  background: none;
+  background-color: #ff5252;
+  color: white;
   border: none;
-  color: #ff5252;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
   font-size: 18px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background-color 0.2s;
 }
 
 .delete-button:hover {
-  background-color: rgba(255, 82, 82, 0.1);
+  background-color: #d32f2f;
 }
 
-/* Focus state for editable cells */
+[contentEditable] {
+  padding: 6px;
+  border-radius: 4px;
+  min-height: 24px;
+  transition: background-color 0.2s;
+}
+
+[contentEditable]:hover {
+  background-color: #f5f5f5;
+}
+
 [contentEditable]:focus {
-  background-color: #f0f7ff;
-  box-shadow: inset 0 0 0 2px #0078d7;
+  outline: none;
+  background-color: #e8f0fe;
+  box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.3);
 }
