@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import TableRow from '../components/TableRow/TableRow';
+import config from '../config';
 import exportCsv from '../services/csv';
+import LlmDefinitionService from '../services/llm-definition';
 import { BookDeck, VocabItem, Word } from '../services/types';
 import VocabStore from '../services/vocab-store';
 import './DeckDetailView.css';
@@ -13,6 +15,11 @@ const DeckDetailView: React.FC = () => {
   const [vocabItems, setVocabItems] = useState<VocabItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string>("");
+  const [selectedApiUrl, setSelectedApiUrl] = useState<string>("");
+  const [customApiUrl, setCustomApiUrl] = useState<string>("");
+  const [showApiSettings, setShowApiSettings] = useState<boolean>(false);
+  const [fetchingDefinitions, setFetchingDefinitions] = useState<boolean>(false);
 
   useEffect(() => {
     if (!id) {
@@ -30,6 +37,21 @@ const DeckDetailView: React.FC = () => {
 
       setVocabItems(items);
       setLoading(false);
+
+      // Load saved API settings
+      const settings = LlmDefinitionService.getSettings();
+      setApiKey(settings.apiKey);
+
+      // Find the matching predefined API or set to custom
+      const matchingApi = config.llmApis.find(api => api.url === settings.apiUrl);
+      if (matchingApi) {
+        setSelectedApiUrl(matchingApi.url);
+      } else if (settings.apiUrl) {
+        setSelectedApiUrl('custom');
+        setCustomApiUrl(settings.apiUrl);
+      } else if (config.llmApis.length > 0) {
+        setSelectedApiUrl(config.llmApis[0].url);
+      }
     } catch (err) {
       console.error('Error loading deck:', err);
       setError('Failed to load vocabulary deck');
@@ -91,9 +113,45 @@ const DeckDetailView: React.FC = () => {
     }
   }, [handleItemUpdate]);
 
-  const handleFetchDefinitions = () => {
-    // This would be implemented to fetch definitions for words that don't have them
-    alert('Fetching definitions functionality would be implemented here');
+  const handleApiSettingsChange = () => {
+    // Determine the actual API URL based on selection
+    const actualApiUrl = selectedApiUrl === 'custom' ? customApiUrl : selectedApiUrl;
+
+    // Save the settings
+    LlmDefinitionService.saveSettings({
+      apiKey,
+      apiUrl: actualApiUrl
+    });
+
+    setShowApiSettings(false);
+  };
+
+  const handleFetchDefinitions = async () => {
+    if (!LlmDefinitionService.isConfigured()) {
+      setShowApiSettings(true);
+      return;
+    }
+
+    try {
+      setFetchingDefinitions(true);
+      const updatedItems = await LlmDefinitionService.fetchDefinitions(vocabItems);
+
+      // Update the items in the state and store
+      setVocabItems(updatedItems);
+
+      // Update each item in the store
+      updatedItems.forEach(item => {
+        if (item.def) {
+          VocabStore.updateItem(id!, item, { def: item.def });
+        }
+      });
+
+      setFetchingDefinitions(false);
+    } catch (error) {
+      console.error('Error fetching definitions:', error);
+      alert('Failed to fetch definitions. Please check your API settings.');
+      setFetchingDefinitions(false);
+    }
   };
 
   if (loading) {
@@ -122,8 +180,81 @@ const DeckDetailView: React.FC = () => {
             <button className="export-button anki-cloze" onClick={() => handleExport('cloze')}>Anki Cloze</button>
             <button className="export-button plain-csv" onClick={() => handleExport('plain')}>Plain CSV</button>
           </div>
+          <div className="ai-definition-buttons">
+            <button
+              className="fetch-definitions-button"
+              onClick={handleFetchDefinitions}
+              disabled={fetchingDefinitions}
+            >
+              {fetchingDefinitions ? 'Fetching...' : 'Fetch AI Definitions'}
+            </button>
+            <button
+              className="api-settings-button"
+              onClick={() => setShowApiSettings(true)}
+            >
+              API Settings
+            </button>
+          </div>
         </div>
       </div>
+
+      {showApiSettings && (
+        <div className="api-settings-modal">
+          <div className="api-settings-content">
+            <h2>LLM API Settings</h2>
+            <div className="form-group">
+              <label htmlFor="api-select">Select API:</label>
+              <select
+                id="api-select"
+                value={selectedApiUrl}
+                onChange={(e) => {
+                  setSelectedApiUrl(e.target.value);
+                }}
+              >
+                {config.llmApis.map((api, index) => (
+                  <option key={index} value={api.name === 'Custom' ? 'custom' : api.url}>
+                    {api.name}{api.description ? ` - ${api.description}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {selectedApiUrl === 'custom' && (
+              <div className="form-group">
+                <label htmlFor="custom-api-url">Custom API URL:</label>
+                <input
+                  type="text"
+                  id="custom-api-url"
+                  value={customApiUrl}
+                  onChange={(e) => setCustomApiUrl(e.target.value)}
+                  placeholder="https://your-api-endpoint.com"
+                />
+              </div>
+            )}
+
+            <div className="form-group">
+              <label htmlFor="api-key">API Key:</label>
+              <input
+                type="password"
+                id="api-key"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter your API key"
+              />
+            </div>
+
+            <div className="modal-buttons">
+              <button onClick={() => setShowApiSettings(false)}>Cancel</button>
+              <button
+                onClick={handleApiSettingsChange}
+                disabled={!apiKey || (selectedApiUrl === 'custom' && !customApiUrl)}
+              >
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="deck-detail-table-container">
         {vocabItems.length > 0 ? (

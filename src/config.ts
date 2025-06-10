@@ -13,16 +13,42 @@ interface ArticleMap {
   [language: string]: ArticleGender;
 }
 
+interface LlmApiConfig {
+  name: string;
+  url: string;
+  description?: string;
+}
+
 interface Config {
   apiUrl: string;
   maxExercises: number;
   languages: LanguageMap;
   articles: ArticleMap;
+  llmApis: LlmApiConfig[];
 }
 
 const config: Config = {
   apiUrl: "https://e33zq7nat7.execute-api.eu-west-1.amazonaws.com/dev",
   maxExercises: 10,
+
+  // Add predefined LLM API configurations
+  llmApis: [
+    {
+      name: "Gemini",
+      url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash",
+      description: "Google Gemini models",
+    },
+    {
+      name: "OpenAI",
+      url: "https://api.openai.com/v1/chat/completions",
+      description: "OpenAI's GPT models",
+    },
+    {
+      name: "Anthropic",
+      url: "https://api.anthropic.com/v1/messages",
+      description: "Anthropic's Claude models",
+    },
+  ],
 
   languages: {
     aa: "Afar",
