@@ -35,7 +35,7 @@ const config: Config = {
   llmApis: [
     {
       name: "Gemini",
-      url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash",
+      url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash",
       description: "Google Gemini models",
     },
     {
