@@ -9,8 +9,13 @@ interface LlmApiSettings {
   apiUrl: string;
 }
 
-const MAX_REQUESTS_PER_MINUTE = 15;
+// Constants for API rate limiting and batching
+const MAX_REQUESTS_PER_MINUTE = 10;
 const REQUEST_INTERVAL_MS = (60 * 1000) / MAX_REQUESTS_PER_MINUTE;
+const TOKEN_LIMIT_PER_REQUEST = 200000;
+const TOKENS_PER_CHAR_ESTIMATE = 0.35;
+const TOKENS_PER_WORD_ESTIMATE = 1.5;
+const RESPONSE_TOKEN_BUFFER = 1000; // Buffer for response tokens
 
 export interface DefinitionPromptOptions {
   sourceLang?: string;
@@ -68,6 +73,46 @@ class LlmDefinitionService {
   }
 
   /**
+   * Estimate token count for a string
+   * @param text The text to estimate tokens for
+   * @returns Estimated token count
+   */
+  private estimateTokenCount(text: string): number {
+    if (!text) return 0;
+    // Simple estimation based on character count and word count
+    const charCount = text.length;
+    const wordCount = text.split(/\s+/).length;
+    
+    return Math.ceil(
+      (charCount * TOKENS_PER_CHAR_ESTIMATE + wordCount * TOKENS_PER_WORD_ESTIMATE) / 2
+    );
+  }
+
+  /**
+   * Calculate optimal batch size based on token limits
+   * @param items The vocabulary items to process
+   * @param options The prompt options
+   * @returns The optimal batch size
+   */
+  private calculateOptimalBatchSize(
+    items: VocabItem[],
+    options: DefinitionPromptOptions
+  ): number {
+    if (items.length <= 1) return 1;
+    
+    const templatePrompt = this.buildBatchPrompt(items.slice(0, 2), options);
+    const templateTokens = this.estimateTokenCount(templatePrompt);
+    
+    const perItemTokens = templateTokens / 2;
+    
+    // Calculate how many items we can fit within token limit, leaving room for response
+    const availableTokens = TOKEN_LIMIT_PER_REQUEST - RESPONSE_TOKEN_BUFFER;
+    const estimatedBatchSize = Math.floor(availableTokens / perItemTokens);
+
+    return Math.max(1, Math.min(estimatedBatchSize, items.length));
+  }
+
+  /**
    * Fetch definitions for vocabulary items using LLM
    * @param items The vocabulary items to get definitions for
    * @param options Optional: prompt/language customization
@@ -85,26 +130,37 @@ class LlmDefinitionService {
     if (itemsToUpdate.length === 0) return items;
 
     const updatedItems = [...items];
-    const batchSize = 3;
-
-    for (let i = 0; i < itemsToUpdate.length; i += batchSize) {
-      const batch = itemsToUpdate.slice(i, i + batchSize);
-      for (const item of batch) {
-        try {
-          await this.waitForRateLimit();
-          const result = await this.fetchSingleDefinition(item, options);
-          const index = updatedItems.findIndex(
-            (originalItem) =>
-              originalItem.selection === result.selection &&
-              originalItem.context === result.context
-          );
-          if (index !== -1) updatedItems[index].def = result.def;
-        } catch (error) {
-          console.error(
-            `Error fetching definition for "${item.selection}":`,
-            error
-          );
-        }
+    
+    // Process items in dynamically sized batches
+    let processedCount = 0;
+    while (processedCount < itemsToUpdate.length) {
+      try {
+        await this.waitForRateLimit();
+        
+        const remainingItems = itemsToUpdate.slice(processedCount);
+        const batchSize = this.calculateOptimalBatchSize(remainingItems, options);
+        const batch = remainingItems.slice(0, batchSize);
+        
+        console.log(`Processing batch of ${batch.length} items (${processedCount + 1}-${processedCount + batch.length} of ${itemsToUpdate.length})`);
+          const results = await this.fetchBatchDefinitions(batch, options);
+          // results is a json object like {"1": "definition 1", "2": "definition 2"}
+          // Assign definitions to items based on their index in the batch
+          batch.forEach((item, idx) => {
+            const definition = results[String(idx + 1)];
+            const itemIndex = updatedItems.findIndex(
+              (originalItem) => originalItem === item
+            );
+            if (itemIndex !== -1 && definition) {
+              updatedItems[itemIndex].def = definition;
+            }
+          });
+        
+        processedCount += batch.length;
+      } catch (error) {
+        console.error(
+          `Error fetching definitions for batch starting at index ${processedCount}:`,
+          error
+        );
       }
     }
 
@@ -112,19 +168,19 @@ class LlmDefinitionService {
   }
 
   /**
-   * Fetch definition for a single vocabulary item
-   * @param item The vocabulary item to get definition for
+   * Fetch definitions for a batch of vocabulary items
+   * @param items The batch of vocabulary items to get definitions for
    * @param options Optional: prompt/language customization
-   * @returns Promise resolving to the updated item
+   * @returns Promise resolving to the updated items
    */
-  private async fetchSingleDefinition(
-    item: VocabItem,
+  private async fetchBatchDefinitions(
+    items: VocabItem[],
     options: DefinitionPromptOptions = {}
-  ): Promise<VocabItem> {
-    const updatedItem = { ...item };
-
+  ): Promise<{ [key: string]: string }> {
     try {
-      const prompt = this.buildPrompt(item, options);
+      const prompt = this.buildBatchPrompt(items, options);
+      const estimatedTokens = this.estimateTokenCount(prompt);
+      console.log(`Batch prompt estimated tokens: ${estimatedTokens}`);
 
       const { url, headers, body } = this.buildApiRequest(prompt);
 
@@ -139,17 +195,60 @@ class LlmDefinitionService {
       }
 
       const data = await response.json();
-      const definition = this.extractDefinitionFromResponse(data);
-
-      updatedItem.def = definition.trim();
-      return updatedItem;
+      const definitionsText = this.extractDefinitionFromResponse(data);
+      return JSON.parse(this.extractJsonFromText(definitionsText));
     } catch (error) {
-      console.error(
-        `Error fetching definition for "${item.selection}":`,
-        error
-      );
+      console.error(`Error fetching batch definitions:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Extract valid JSON from text that might contain markdown or other formatting
+   * @param text The text that might contain JSON
+   * @returns Cleaned JSON string
+   */
+  private extractJsonFromText(text: string): string {
+    // Remove markdown code block markers if present
+    let cleanedText = text.replace(/```json\s*|\s*```/g, '');
+    
+    // Find JSON object in the text
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanedText = jsonMatch[0];
+    }
+    
+    return cleanedText;
+  }
+
+  /**
+   * Build a batch prompt for multiple vocabulary items
+   * @param items The vocabulary items to include in the prompt
+   * @param options Optional: prompt/language customization
+   * @returns The batch prompt string
+   */
+  protected buildBatchPrompt(
+    items: VocabItem[],
+    options: DefinitionPromptOptions = {}
+  ): string {
+    const sourceLang = options.sourceLang || "German";
+    const targetLang = options.targetLang || "English";
+    
+    let prompt = `Define these ${sourceLang} words in ${targetLang}. Be concise and focus on the meaning in the given context.\n`;
+    
+    if (sourceLang.toLowerCase() === "german") {
+      prompt += `For German nouns, include article and plural form in the definition.\n\n`;
+    }
+
+    items.forEach((item, index) => {
+      prompt += `${index + 1}. ${item.baseForm}\nContext: ${item.context}\n\n`;
+    });
+    
+    prompt += `Format your response as a valid JSON object with the following structure:\n`;
+    prompt += `{\n  "1": "definition of word 1",\n  "2": "definition of word 2",\n  ...\n}\n`;
+    prompt += `Each key should be the index number of the word, and each value should be the definition.\n`;
+    
+    return prompt;
   }
 
   /**
@@ -165,7 +264,7 @@ class LlmDefinitionService {
     }
     const sourceLang = options.sourceLang || "German";
     const targetLang = options.targetLang || "English";
-    let prompt = `Define the ${sourceLang} word _${item.baseForm}_ as used in this context: _${item.context}_. Provide only the ${targetLang} definition, focusing on the specific meaning in this context. Be concise and clear.`;
+    let prompt = `Define the ${sourceLang} word "${item.baseForm}" as used in this context: "${item.context}". Provide only the ${targetLang} definition, focusing on the specific meaning in this context. Be concise and clear.`;
     if (sourceLang.toLowerCase() === "german") {
       prompt +=
         " If the word is a noun, also show its article and the plural form at the end of the definition.";
@@ -192,18 +291,18 @@ class LlmDefinitionService {
           {
             role: "system",
             content:
-              "You are a helpful dictionary assistant that provides concise, accurate definitions.",
+              "You are a helpful dictionary assistant that provides concise, accurate definitions. Always format your responses as valid JSON when requested.",
           },
           { role: "user", content: prompt },
         ],
-        max_tokens: 100,
+        max_tokens: 1000,
         temperature: 0.3,
       });
     } else if (this.apiUrl.includes("anthropic")) {
       body = JSON.stringify({
         model: "claude-instant-1",
         prompt: `\n\nHuman: ${prompt}\n\nAssistant:`,
-        max_tokens_to_sample: 100,
+        max_tokens_to_sample: 1000,
         temperature: 0.3,
       });
       headers["x-api-key"] = this.apiKey;
@@ -218,7 +317,7 @@ class LlmDefinitionService {
               },
             ],
           },
-        ],
+        ]
       });
       url = `${this.apiUrl}:generateContent?key=${this.apiKey}`;
       delete headers["Authorization"];
@@ -226,7 +325,7 @@ class LlmDefinitionService {
       // Generic format for custom APIs
       body = JSON.stringify({
         prompt: prompt,
-        max_tokens: 100,
+        max_tokens: 1000,
         temperature: 0.3,
       });
     }
