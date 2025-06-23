@@ -34,22 +34,17 @@ const DeckView: React.FC<DeckViewProps> = ({ vocabFile }) => {
         const fileToProcess = vocabFile || fileFromState;
         const arrayBuffer = await fileToProcess.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
-
-        // This would need to be implemented in the KindleService
-        // For now, we'll just use mock data
         const kindleService = new (await import('../services/kindle')).default();
         await kindleService.init();
         kindleService.loadDb(uint8Array);
 
         const booksData = kindleService.queryBooks();
         if (booksData) {
-          // Process each book to get its vocabulary
           const booksWithVocabs = booksData.map(book => {
             const vocabs = kindleService.queryVocabs(book.id);
             return { ...book, vocabs };
           });
 
-          // Update KindleVocab service with the new books
           KindleVocab.setBooks(booksWithVocabs);
           setBooks(booksWithVocabs);
         } else {

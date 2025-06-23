@@ -89,7 +89,7 @@ export default class KindleService {
     let escapedId = id.replace(/'/g, "''");
     let vocabsQuery = this.db.exec(`
 SELECT
-words.stem, words.word, lookups.usage
+lookups.id, words.stem, words.word, lookups.usage
 FROM lookups
 LEFT OUTER JOIN words
 ON lookups.word_key=words.id
@@ -98,14 +98,13 @@ WHERE lookups.book_key='${escapedId}';
 
     if (!vocabsQuery[0]) return;
 
-    return vocabsQuery[0].values
-      .map((row: any[]) => {
-        return {
-          baseForm: row[0],
-          selection: row[1],
-          context: row[2],
-        };
-      })
-      .filter((item: Vocab) => item.selection);
+    return vocabsQuery[0].values.map((row: any[]) => {
+      return {
+        id: row[0],
+        baseForm: row[1],
+        selection: row[2],
+        context: row[3],
+      };
+    });
   }
 }

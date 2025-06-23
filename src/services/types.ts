@@ -6,6 +6,7 @@
  * A vocabulary entry in the database
  */
 export interface Vocab {
+  id: string;
   baseForm: string; // word stem
   selection: string; // the word as highlighted on the device
   context: string; // word context
