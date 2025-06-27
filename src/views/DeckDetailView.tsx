@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import TableRow from '../components/TableRow/TableRow';
 import config from '../config';
 import exportCsv from '../services/csv';
-import LlmDefinitionService from '../services/llm-definition';
+import { LlmDefinitionService } from '../services/llm';
 import { BookDeck, VocabItem, Word } from '../services/types';
 import VocabStore from '../services/vocab-store';
 import './DeckDetailView.css';
@@ -20,7 +20,7 @@ const DeckDetailView: React.FC = () => {
   const [customApiUrl, setCustomApiUrl] = useState<string>("");
   const [showApiSettings, setShowApiSettings] = useState<boolean>(false);
   const [fetchingDefinitions, setFetchingDefinitions] = useState<boolean>(false);
-
+  const llmService = React.useMemo(() => new LlmDefinitionService(), []);
   useEffect(() => {
     if (!id) {
       navigate('/decks');
@@ -38,8 +38,7 @@ const DeckDetailView: React.FC = () => {
       setVocabItems(items);
       setLoading(false);
 
-      // Load saved API settings
-      const settings = LlmDefinitionService.getSettings();
+      const settings = llmService.getSettings();
       setApiKey(settings.apiKey);
 
       // Find the matching predefined API or set to custom
@@ -118,7 +117,7 @@ const DeckDetailView: React.FC = () => {
     const actualApiUrl = selectedApiUrl === 'custom' ? customApiUrl : selectedApiUrl;
 
     // Save the settings
-    LlmDefinitionService.saveSettings({
+    llmService.saveSettings({
       apiKey,
       apiUrl: actualApiUrl
     });
@@ -127,14 +126,14 @@ const DeckDetailView: React.FC = () => {
   };
 
   const handleFetchDefinitions = async () => {
-    if (!LlmDefinitionService.isConfigured()) {
+    if (!llmService.isConfigured()) {
       setShowApiSettings(true);
       return;
     }
 
     try {
       setFetchingDefinitions(true);
-      const updatedItems = await LlmDefinitionService.fetchDefinitions(vocabItems);
+      const updatedItems = await llmService.fetchDefinitions(vocabItems);
 
       // Update the items in the state and store
       setVocabItems(updatedItems);
