@@ -8,10 +8,10 @@ export function buildBatchPrompt(
   const sourceLang = options.sourceLang || "German";
   const targetLang = options.targetLang || "English";
 
-  let prompt = `Define these ${sourceLang} words in ${targetLang}. Be concise and focus on the meaning in the given context.\n`;
+  let prompt = `Define these ${sourceLang} words in ${targetLang} for the given context. In case a word has multiple definitions, choose the one that best fits into the context.\n`;
 
   if (sourceLang.toLowerCase() === "german") {
-    prompt += `For German nouns, include article and plural form in the definition.\n\n`;
+    prompt += `For German nouns, include article and plural form in the definition. For example, if the given German word is "Apfel", your definition should be "(der, Äpfel) apple"; another example, given "Birne", your definition should be "(die, -n) pear". From the examples, you see that if the plural form has Umlauts, then you show the complete form, other you should the shortened form.\n\n`;
   }
 
   items.forEach((item, index) => {

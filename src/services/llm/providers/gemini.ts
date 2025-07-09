@@ -1,8 +1,8 @@
 import { VocabItem } from "../../types";
 import { buildBatchPrompt } from "../prompts/definition";
 import { DefinitionPromptOptions, VocabDefinitionResponse } from "../types";
-import { BaseLlmProvider } from "./base";
 import { extractJsonFromText } from "../utils";
+import { BaseLlmProvider } from "./base";
 
 export class GeminiProvider extends BaseLlmProvider {
   async fetchDefinitions(
@@ -10,6 +10,8 @@ export class GeminiProvider extends BaseLlmProvider {
     options: DefinitionPromptOptions
   ): Promise<VocabDefinitionResponse> {
     const prompt = buildBatchPrompt(items, options);
+    console.log("GeminiProvider fetchDefinitions prompt:", prompt);
+    
     const url = `${this.apiUrl}:generateContent?key=${this.apiKey}`;
     
     const body = JSON.stringify({
