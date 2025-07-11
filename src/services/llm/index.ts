@@ -128,12 +128,18 @@ export class LlmDefinitionService {
         const results = await this.provider!.fetchDefinitions(batch, options);
 
         batch.forEach((item, idx) => {
-          const definition = results[String(idx + 1)];
+          const definition = results[String(idx + 1)][0];
+          const plural = results[String(idx + 1)][1];
+          const usage = results[String(idx + 1)][2];
+          const usageTranslation = results[String(idx + 1)][3];
           const itemIndex = updatedItems.findIndex(
             (originalItem) => originalItem === item
           );
           if (itemIndex !== -1 && definition) {
             updatedItems[itemIndex].def = this.normalizeDefinition(definition);
+            updatedItems[itemIndex].plural = plural || "";
+            updatedItems[itemIndex].usage = usage || "";
+            updatedItems[itemIndex].usageTranslation = usageTranslation || "";
           }
         });
 

@@ -33,6 +33,33 @@ const TableRow: React.FC<TableRowProps> = ({ item, index, onCellEdit, onDeleteRo
         {item.def}
       </div>
     </td>
+    <td className="definition-cell">
+      <div
+        contentEditable
+        suppressContentEditableWarning
+        onBlur={(e) => onCellEdit(index, 'plural', e.target.textContent || '')}
+      >
+        {item.plural || ''}
+      </div>
+    </td>
+    <td className="definition-cell">
+      <div
+        contentEditable
+        suppressContentEditableWarning
+        onBlur={(e) => onCellEdit(index, 'usage', e.target.textContent || '')}
+      >
+        {item.usage || ''}
+      </div>
+    </td>
+    <td className="definition-cell">
+      <div
+        contentEditable
+        suppressContentEditableWarning
+        onBlur={(e) => onCellEdit(index, 'usageTranslation', e.target.textContent || '')}
+      >
+        {item.usageTranslation || ''}
+      </div>
+    </td>
     <td className="context-cell">
       <div
         contentEditable

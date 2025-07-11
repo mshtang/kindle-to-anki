@@ -264,6 +264,9 @@ const DeckDetailView: React.FC = () => {
                 <th className="word-column">Word</th>
                 <th className="word-column">Lemma</th>
                 <th className="definition-column">Definition</th>
+                <th className="word-column">Plural</th>
+                <th className="word-column">Usage</th>
+                <th className="word-column">Usage Translation</th>
                 <th className="context-column">Context</th>
                 <th className="action-column"></th>
               </tr>

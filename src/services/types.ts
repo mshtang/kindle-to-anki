@@ -37,6 +37,9 @@ export interface VocabItem {
   selection: string; // the word as highlighted on the device
   context: string; // the context the word appears in
   def?: string;
+  plural?: string;
+  usage?: string;
+  usageTranslation?: string;
   language?: string;
   _removed?: boolean;
 }

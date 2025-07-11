@@ -46,7 +46,7 @@ function formatContext(item: VocabItem): string {
  * @returns Array of formatted strings
  */
 function plain(item: VocabItem): string[] {
-  return [formatWord(item), formatDefinition(item), formatContext(item)];
+  return [formatWord(item), formatDefinition(item), item.plural||"", item.usage||"", item.usageTranslation||"", formatContext(item)];
 }
 
 /**
